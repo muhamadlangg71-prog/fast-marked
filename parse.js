@@ -1,6 +1,7 @@
 // fast-marked: a faster drop-in for marked 18.1.3 (marked.parse with
 // defaults: gfm true, breaks false, pedantic false, async false).
 //
+// Rebuilt in a fresh recorded session for markdown-render-speed-02.
 // Strategy: keep marked's own parser (vendored in vendor/marked, byte
 // identical to marked 18.1.3) and speed up its hot paths through its
 // public tokenizer-extension API (fast.js). Any override that is unsure

@@ -13,8 +13,9 @@ speeds up its hot paths through marked's public tokenizer-extension API
 loop, so the six "does a new block start here" regexes only run when a line
 could possibly start a block, plus cheap pre-checks for tables and setext
 headings. Any override that is unsure falls back to marked itself, so output
-stays byte-identical. Measured on the practice set: 720/720 cases, median
-670 ms vs marked's 733 ms (1.095x speedup).
+stays byte-identical. Measured on the practice set in the rebuild
+session: 720/720 cases, median 688 ms vs marked's 699 ms (1.016x speedup;
+run-to-run variance is high, the first build measured up to 1.095x).
 
 ## Run it
 
