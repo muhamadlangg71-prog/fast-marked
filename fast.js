@@ -62,6 +62,11 @@ function canStartBlock(line) {
  * Everything else is marked's logic unchanged.
  */
 function fastList(e) {
+  // A list item starts with up to 3 spaces, then -, *, +, or a digit.
+  const c0 = firstAfterSpaces(e);
+  if (c0 !== 45 && c0 !== 42 && c0 !== 43 && !(c0 >= 48 && c0 <= 57)) {
+    return undefined;
+  }
   let t = this.rules.block.list.exec(e);
   if (!t) return undefined;
   const n = e;
@@ -251,8 +256,7 @@ function fastList(e) {
  * must consist only of `|`, `-`, `:` and spaces/tabs, with at least one
  * `-`. Otherwise no table can start here; return undefined so the block
  * loop moves on. Otherwise return false so marked's own table runs.
- */
-function fastTable(e) {
+ */function fastTable(e) {
   const nl = e.indexOf('\n');
   if (nl === -1) return undefined;
   const nl2 = e.indexOf('\n', nl + 1);
@@ -284,9 +288,50 @@ function fastLheading(e) {
   return false;
 }
 
+/** First non-space char code after skipping up to 3 leading spaces, or -1. */
+function firstAfterSpaces(e) {
+  let i = 0;
+  while (i < 3 && i < e.length && e.charCodeAt(i) === 32) i++;
+  return i < e.length ? e.charCodeAt(i) : -1;
+}
+
+/** Block pre-check factory: only run the original when the first char can start it. */
+function skipIfNot(markers) {
+  return (e) => {
+    const c = firstAfterSpaces(e);
+    return markers.indexOf(c) !== -1 ? false : undefined;
+  };
+}
+
+// Block tokenizers, first-character pre-checks. Each returns false ("let
+// marked decide") when the block could start here, undefined otherwise.
+// All of marked's block regexes start with `^ {0,3}` + a marker char.
+function fastSpace(e) {
+  const c = e.charCodeAt(0);
+  return c === 32 || c === 9 || c === 10 ? false : undefined;
+}
+function fastCode(e) {
+  const c = e.charCodeAt(0);
+  return c === 32 || c === 9 ? false : undefined;
+}
+const fastFences = skipIfNot([96, 126]); // ` ~
+const fastHeading = skipIfNot([35]); // #
+const fastHr = skipIfNot([45, 42, 95]); // - * _
+const fastBlockquote = skipIfNot([62]); // >
+const fastHtml = skipIfNot([60]); // <
+const fastDef = skipIfNot([91]); // [
+
 /** Tokenizer overrides to hand to marked through `use({ tokenizer })`. */
 export const fastTokenizer = {
+  space: fastSpace,
+  code: fastCode,
+  fences: fastFences,
+  heading: fastHeading,
+  hr: fastHr,
+  blockquote: fastBlockquote,
   list: fastList,
+  html: fastHtml,
+  def: fastDef,
   table: fastTable,
   lheading: fastLheading,
 };
