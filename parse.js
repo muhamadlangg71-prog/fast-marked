@@ -1,15 +1,16 @@
-// Entry point for the fast-marked bounty entry.
+// fast-marked: a faster drop-in for marked 18.1.3 (marked.parse with
+// defaults: gfm true, breaks false, pedantic false, async false).
 //
-// parse(markdown) returns exactly the HTML that marked 18.1.3 renders with
-// its default options (GFM on, breaks off, pedantic off, async off).
-// The vendored marked build (vendor/marked/marked.esm.js, MIT) is the
-// reference implementation; the fast renderer below handles the common
-// cases itself and falls back to marked for anything it cannot render
-// byte-for-byte, so correctness is never traded for speed.
+// Strategy: keep marked's own parser (vendored in vendor/marked, byte
+// identical to marked 18.1.3) and speed up its hot paths through its
+// public tokenizer-extension API (fast.js). Any override that is unsure
+// falls back to marked itself, so output stays byte-identical.
 
-import { marked } from './vendor/marked/marked.esm.js';
+import { Marked } from './vendor/marked/marked.esm.js';
+import { fastTokenizer } from './fast.js';
 
-/** The HTML marked renders for `markdown`, with marked's defaults. */
+const marked = new Marked({ tokenizer: fastTokenizer });
+
 export function parse(markdown) {
   return marked.parse(markdown);
 }
